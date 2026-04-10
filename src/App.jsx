@@ -229,11 +229,6 @@ function App() {
 
       <footer className="footer container">
         <div className="footer-text">© {new Date().getFullYear()} Kiran Raut. All rights reserved.</div>
-        <div className="footer-links" style={{display: 'flex', gap: '2rem'}}>
-          <a href="#" className="nav-item">Twitter</a>
-          <a href="#" className="nav-item">LinkedIn</a>
-          <a href="#" className="nav-item">GitHub</a>
-        </div>
       </footer>
     </>
   );
