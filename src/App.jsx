@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Database, Code2, LayoutTemplate, Smartphone, Server, Brackets } from 'lucide-react';
@@ -18,11 +18,36 @@ const skills = [
 
 function App() {
   const customCursorRef = useRef(null);
+  const glowRef = useRef(null);
+  const previewContainerRef = useRef(null);
+  const previewImgRef = useRef(null);
   const heroRef = useRef(null);
   const skillsRef = useRef(null);
   const projectsRef = useRef(null);
+  const preloaderRef = useRef(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
-  // Custom Cursor Logic
+  // Preloader Logic
+  useEffect(() => {
+    const counter = { value: 0 };
+    gsap.to(counter, {
+      value: 100,
+      duration: 2,
+      ease: 'power3.inOut',
+      onUpdate: () => {
+        setLoadingProgress(Math.round(counter.value));
+      },
+      onComplete: () => {
+        gsap.to(preloaderRef.current, {
+          yPercent: -100,
+          duration: 1,
+          ease: 'power4.inOut'
+        });
+      }
+    });
+  }, []);
+
+  // Custom Cursor & Magnetic Logic
   useEffect(() => {
     const cursor = customCursorRef.current;
     
@@ -33,6 +58,15 @@ function App() {
         duration: 0.1,
         ease: 'power2.out'
       });
+      
+      if (glowRef.current) {
+        gsap.to(glowRef.current, {
+          x: e.clientX,
+          y: e.clientY,
+          duration: 1.5,
+          ease: 'power2.out'
+        });
+      }
     };
 
     const handleMouseOver = (e) => {
@@ -43,12 +77,48 @@ function App() {
       }
     };
 
+    // Magnetic Effect for Nav Items
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    const handleMagneticMove = (e) => {
+      const item = e.currentTarget;
+      const position = item.getBoundingClientRect();
+      const x = e.clientX - position.left - position.width / 2;
+      const y = e.clientY - position.top - position.height / 2;
+      
+      gsap.to(item, {
+        x: x * 0.3,
+        y: y * 0.3,
+        duration: 0.5,
+        ease: 'power3.out'
+      });
+    };
+
+    const handleMagneticLeave = (e) => {
+      const item = e.currentTarget;
+      gsap.to(item, {
+        x: 0,
+        y: 0,
+        duration: 0.8,
+        ease: 'elastic.out(1, 0.3)'
+      });
+    };
+
+    navItems.forEach(item => {
+      item.addEventListener('mousemove', handleMagneticMove);
+      item.addEventListener('mouseleave', handleMagneticLeave);
+    });
+
     window.addEventListener('mousemove', moveCursor);
     window.addEventListener('mouseover', handleMouseOver);
 
     return () => {
       window.removeEventListener('mousemove', moveCursor);
       window.removeEventListener('mouseover', handleMouseOver);
+      navItems.forEach(item => {
+        item.removeEventListener('mousemove', handleMagneticMove);
+        item.removeEventListener('mouseleave', handleMagneticLeave);
+      });
     };
   }, []);
 
@@ -61,14 +131,14 @@ function App() {
       // Hero Animation
       const tl = gsap.timeline();
       
-      tl.fromTo('.hero-title-line', 
-        { y: 100 },
+      tl.fromTo('.hero-char', 
+        { y: 150 },
         {
           y: 0,
           duration: 1.2,
-          stagger: 0.15,
+          stagger: 0.08,
           ease: 'power4.out',
-          delay: 0.2
+          delay: 2.2 // wait for preloader to finish
         }
       )
       .fromTo('.hero-description', 
@@ -97,19 +167,17 @@ function App() {
         }
       );
 
-      gsap.fromTo('.skill-pill', 
-        { opacity: 0, y: 30, scale: 0.9 },
+      gsap.fromTo('.skills-marquee-container', 
+        { opacity: 0, scale: 0.95 },
         {
           scrollTrigger: {
-            trigger: '.skills-container',
+            trigger: '.skills-marquee-container',
             start: 'top 85%',
           },
           opacity: 1,
-          y: 0,
           scale: 1,
-          duration: 0.8,
-          stagger: 0.1,
-          ease: 'back.out(1.5)'
+          duration: 1.2,
+          ease: 'power3.out'
         }
       );
 
@@ -136,6 +204,10 @@ function App() {
 
   return (
     <>
+      <div className="preloader" ref={preloaderRef}>
+        <div className="preloader-counter">{loadingProgress}%</div>
+      </div>
+      <div className="ambient-glow" ref={glowRef}></div>
       <div className="custom-cursor" ref={customCursorRef}></div>
       
       <nav className="navbar">
@@ -153,8 +225,16 @@ function App() {
           <div className="hero-content">
             <div className="hero-subtitle">Full Stack Developer</div>
             <h1 className="hero-title">
-              <span><span className="hero-title-line" style={{ display: 'inline-block' }}>Kiran</span></span>
-              <span><span className="hero-title-line text-gradient" style={{ display: 'inline-block' }}>Raut</span></span>
+              <span style={{ display: 'inline-block', overflow: 'hidden' }}>
+                {"Kiran".split('').map((char, i) => (
+                  <span key={`first-${i}`} className="hero-char" style={{ display: 'inline-block' }}>{char}</span>
+                ))}
+              </span>
+              <span style={{ display: 'inline-block', overflow: 'hidden', marginLeft: '0.3em' }}>
+                {"Raut".split('').map((char, i) => (
+                  <span key={`last-${i}`} className="hero-char text-gradient" style={{ display: 'inline-block' }}>{char}</span>
+                ))}
+              </span>
             </h1>
             <p className="hero-description">
               A creative developer specializing in building exceptional digital experiences. I blend design with robust engineering, crafting everything from fluid frontends to resilient backends.
@@ -175,18 +255,33 @@ function App() {
               My <span className="text-gradient">Arsenal</span>
             </h2>
           </div>
-          <div className="skills-container">
-            {skills.map((skill, index) => {
-              const IconComponent = skill.icon;
-              return (
-                <div key={index} className="skill-pill">
-                  <div className="skill-icon-wrap">
-                    <IconComponent size={24} />
+          <div className="skills-marquee-container">
+            <div className="skills-track">
+              {skills.map((skill, index) => {
+                const IconComponent = skill.icon;
+                return (
+                  <div key={`track1-${index}`} className="skill-pill">
+                    <div className="skill-icon-wrap">
+                      <IconComponent size={24} />
+                    </div>
+                    <span>{skill.name}</span>
                   </div>
-                  <span>{skill.name}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            <div className="skills-track" aria-hidden="true">
+              {skills.map((skill, index) => {
+                const IconComponent = skill.icon;
+                return (
+                  <div key={`track2-${index}`} className="skill-pill">
+                    <div className="skill-icon-wrap">
+                      <IconComponent size={24} />
+                    </div>
+                    <span>{skill.name}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
