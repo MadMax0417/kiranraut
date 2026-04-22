@@ -141,15 +141,15 @@ function App() {
       <nav className="navbar">
         <div className="logo">KR.</div>
         <div className="nav-links">
-          <div className="nav-item">Work</div>
-          <div className="nav-item">About</div>
-          <div className="nav-item">Contact</div>
+          <a href="#work" className="nav-item">Work</a>
+          <a href="#about" className="nav-item">About</a>
+          <a href="https://wa.me/918169314760" target="_blank" rel="noopener noreferrer" className="nav-item">Contact</a>
         </div>
       </nav>
 
       <main>
         {/* Hero Section */}
-        <section className="section hero container" ref={heroRef}>
+        <section id="about" className="section hero container" ref={heroRef}>
           <div className="hero-content">
             <div className="hero-subtitle">Full Stack Developer</div>
             <h1 className="hero-title">
@@ -191,7 +191,7 @@ function App() {
         </section>
 
         {/* Selected Work */}
-        <section className="section projects-section container" ref={projectsRef}>
+        <section id="work" className="section projects-section container" ref={projectsRef}>
           <div className="section-header">
             <h2 className="section-title">
               Selected <span className="text-gradient">Work</span>
